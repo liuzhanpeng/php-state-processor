@@ -4,10 +4,10 @@ namespace Lzpeng\StateProcess\Tests\Actions;
 
 use Lzpeng\StateProcess\Contracts\ActionInterface;
 
-class SubmitAction implements ActionInterface
+class FinishAction implements ActionInterface
 {
     public function execute($domainObject)
     {
-        echo 'submit...';
+        echo 'finish...';
     }
 }

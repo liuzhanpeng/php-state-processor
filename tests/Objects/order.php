@@ -8,7 +8,6 @@ use Lzpeng\StateProcess\State;
 class Order implements StatefulInterface
 {
     private $state;
-    public $step;
 
     public function __construct()
     {

@@ -18,7 +18,7 @@ class TransitionTest extends TestCase
         $state2 = new State('inited');
         $state3 = new State('audited');
         $state4 = new State('payed');
-        $state5 = new State('finish');
+        $state5 = new State('finished');
 
         $transition = new Transition([$state1], $state2, SubmitAction::class, function () {
             return new NullTx();
@@ -40,7 +40,7 @@ class TransitionTest extends TestCase
         $state2 = new State('inited');
         $state3 = new State('audited');
         $state4 = new State('payed');
-        $state5 = new State('finish');
+        $state5 = new State('finished');
 
         $transition = new Transition([$state3], $state4, SubmitAction::class, function () {
             return new NullTx();

@@ -2,10 +2,10 @@
 
 namespace Lzpeng\StateProcess;
 
+use Lzpeng\StateProcess\Contracts\ActionInterface;
 use Lzpeng\StateProcess\Contracts\StatefulInterface;
 use Lzpeng\StateProcess\Exceptions\StateException;
-use Lzpeng\StateProcess\Transaction\NullTx;
-use Lzpeng\StateProcess\Transaction\TxCreatorInterface;
+use Lzpeng\StateProcess\Contracts\TxCreatorInterface;
 
 /**
  * 状态流转处理器
@@ -37,7 +37,7 @@ class Processor
     public function __construct(string $txCreatorClass)
     {
         if (!class_exists($txCreatorClass) || !in_array(TxCreatorInterface::class, class_implements($txCreatorClass))) {
-            throw new StateException(sprintf('事务创建器[%s]不存在或未实现\Lzpeng\StateProcess\Transaction\TxCreatorInterface', $txCreatorClass));
+            throw new StateException(sprintf('事务创建器[%s]不存在或未实现\Lzpeng\StateProcess\Tx\TxCreatorInterface', $txCreatorClass));
         }
 
         $this->txCreatorClosure = function () use ($txCreatorClass) {
@@ -101,7 +101,7 @@ class Processor
      */
     public function can(string $id, StatefulInterface $domainObject)
     {
-        if ($this->hasTransition($id)) {
+        if (!$this->hasTransition($id)) {
             return false;
         }
 
@@ -120,7 +120,7 @@ class Processor
      */
     public function execute(string $id, StatefulInterface $domainObject)
     {
-        if ($this->hasTransition($id)) {
+        if (!$this->hasTransition($id)) {
             throw new StateException(sprintf('流转[%s]不存在', $id));
         }
 

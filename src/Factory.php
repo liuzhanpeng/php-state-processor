@@ -26,7 +26,7 @@ class Factory
 
         foreach ($transitions as $k => $item) {
             $fromStates = [];
-            foreach ($item['form'] as $state) {
+            foreach ($item['from'] as $state) {
                 $fromStates[] = new State($state);
             }
 
