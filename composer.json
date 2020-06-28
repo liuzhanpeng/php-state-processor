@@ -1,0 +1,28 @@
+{
+    "name": "lzpeng/php-state-processor",
+    "description": "状态流转处理器",
+    "type": "library",
+    "license": "Apache License 2.0",
+    "authors": [
+        {
+            "name": "liuzhanpeng",
+            "email": "liuzhanpeng@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^8.4|^9.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Lzpeng\\StateProcess\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Lzpeng\\StateProcess\\Tests\\": "tests/"
+        }
+    }
+}
