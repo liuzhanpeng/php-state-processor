@@ -2,6 +2,7 @@
 
 namespace Lzpeng\StateProcess;
 
+use Lzpeng\StateProcess\Contracts\StatefulInterface;
 use Lzpeng\StateProcess\Exceptions\RejectedException;
 
 /**
@@ -68,6 +69,27 @@ class Transition
     }
 
     /**
+     * 是否能运行流转
+     *
+     * @param StatefulInterface $domainObject 业务对象
+     * @return boolean
+     */
+    public function can(StatefulInterface $domainObject)
+    {
+        if ($domainObject->state() === null) {
+            return false;
+        }
+
+        foreach ($this->fromStates() as $state) {
+            if ($domainObject->state()->id() === $state->id()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * 运行流转
      *
      * @param mixed $domainObject 业务对象
@@ -77,8 +99,8 @@ class Transition
     public function run($domainObject)
     {
         $currentState = $domainObject->state();
-        if (!in_array($currentState, $this->fromStates)) {
-            throw new RejectedException(sprintf('当前状态[%s]不能流转到[%s]', $currentState, $this->toState), $currentState, $this->toState);
+        if (!$this->can($domainObject)) {
+            throw new RejectedException(sprintf('当前状态[%s]不能流转到[%s]', $currentState->id(), $this->toState->id()), $currentState, $this->toState);
         }
 
         $txCreator = $this->txCreatorClosure;

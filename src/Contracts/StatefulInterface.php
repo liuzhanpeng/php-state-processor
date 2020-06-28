@@ -17,7 +17,7 @@ interface StatefulInterface
      *
      * @return \Lzpeng\StateProcess\State
      */
-    public function state();
+    public function state(): State;
 
     /**
      * 设置状态

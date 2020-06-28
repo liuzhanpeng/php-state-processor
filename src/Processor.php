@@ -36,7 +36,7 @@ class Processor
      */
     public function __construct(string $txCreatorClass)
     {
-        if (!class_exists($txCreatorClass) || !in_array(TxCreatorInterface::class, class_implements($txCreatorClass::class))) {
+        if (!class_exists($txCreatorClass) || !in_array(TxCreatorInterface::class, class_implements($txCreatorClass))) {
             throw new StateException(sprintf('事务创建器[%s]不存在或未实现\Lzpeng\StateProcess\Transaction\TxCreatorInterface', $txCreatorClass));
         }
 
@@ -107,13 +107,7 @@ class Processor
 
         $transition = $this->transitionClosures[$id]();
 
-        foreach ($transition->fromStates() as $state) {
-            if ($domainObject->state()->id() === $state->id()) {
-                return true;
-            }
-        }
-
-        return false;
+        return $transition->can($domainObject);
     }
 
     /**
