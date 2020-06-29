@@ -98,9 +98,9 @@ class Transition
      */
     public function run($domainObject)
     {
-        $currentState = $domainObject->state();
+        $fromState = $domainObject->state();
         if (!$this->can($domainObject)) {
-            throw new RejectedException(sprintf('当前状态[%s]不能流转到[%s]', $currentState->id(), $this->toState->id()), $currentState, $this->toState);
+            throw new RejectedException(sprintf('当前状态[%s]不能流转到[%s]', $fromState->id(), $this->toState->id()), $fromState, $this->toState);
         }
 
         $txCreator = $this->txCreatorClosure;
@@ -108,7 +108,7 @@ class Transition
 
         $action = new $this->actionClass;
         try {
-            $action->execute($domainObject);
+            $action->execute($domainObject, $fromState, $this->toState());
             $domainObject->setState($this->toState);
             $tx->commit();
         } catch (\Exception $ex) {
