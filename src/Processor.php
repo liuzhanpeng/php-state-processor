@@ -6,6 +6,8 @@ use Lzpeng\StateProcess\Contracts\ActionInterface;
 use Lzpeng\StateProcess\Contracts\StatefulInterface;
 use Lzpeng\StateProcess\Exceptions\StateException;
 use Lzpeng\StateProcess\Contracts\TxCreatorInterface;
+use Lzpeng\StateProcess\Event\Event;
+use Lzpeng\StateProcess\Event\EventManager;
 
 /**
  * 状态流转处理器
