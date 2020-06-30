@@ -5,6 +5,7 @@ use Lzpeng\StateProcess\Tests\Actions\CloseAction;
 use Lzpeng\StateProcess\Tests\Actions\FinishAction;
 use Lzpeng\StateProcess\Tests\Actions\PayAction;
 use Lzpeng\StateProcess\Tests\Actions\SubmitAction;
+use Lzpeng\StateProcess\Tests\Listeners\MessageListener;
 use Lzpeng\StateProcess\Transition;
 use Lzpeng\StateProcess\Tx\NullTx;
 
@@ -32,6 +33,11 @@ return [
             'from' => ['audited'],
             'to' => 'payed',
             'action' => PayAction::class,
+            'events' => [
+                Transition::EVENT_RUN_SUCCESS => [
+                    MessageListener::class,
+                ],
+            ]
         ],
         'finish' => [
             'from' => ['payed'],
