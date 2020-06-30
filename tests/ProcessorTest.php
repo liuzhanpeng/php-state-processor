@@ -9,7 +9,9 @@ use Lzpeng\StateProcess\Tests\Actions\CloseAction;
 use Lzpeng\StateProcess\Tests\Actions\FinishAction;
 use Lzpeng\StateProcess\Tests\Actions\PayAction;
 use Lzpeng\StateProcess\Tests\Actions\SubmitAction;
+use Lzpeng\StateProcess\Tests\Listeners\MessageListener;
 use Lzpeng\StateProcess\Tests\Objects\Order;
+use Lzpeng\StateProcess\Transition;
 use Lzpeng\StateProcess\Tx\NullTx;
 use PHPUnit\Framework\TestCase;
 
@@ -30,6 +32,10 @@ class ProcessorTest extends TestCase
         $processor->addTransition('pay', [$state3], $state4, PayAction::class);
         $processor->addTransition('finish', [$state4], $state5, FinishAction::class);
         $processor->addTransition('close', [$state2, $state3, $state4, $state5], $state6, CloseAction::class);
+        $processor->addTransistionEvent('pay', Transition::EVENT_RUN_SUCCESS, function ($event) {
+            echo '支付成功，闭包发送模析消息...';
+        });
+        $processor->addTransistionEvent('pay', Transition::EVENT_RUN_SUCCESS, MessageListener::class);
 
         $order = new Order();
         $order->setState($state1);
