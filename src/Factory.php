@@ -33,6 +33,14 @@ class Factory
             $toState = new State($item['to']);
 
             $processor->addTransition($k, $fromStates, $toState, $item['action']);
+
+            if (isset($item['events'])) {
+                foreach ($item['events'] as $event => $listeners) {
+                    foreach ($listeners as $listener) {
+                        $processor->addTransistionEvent($k, $event, $listener);
+                    }
+                }
+            }
         }
 
         return $processor;

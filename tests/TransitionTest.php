@@ -23,6 +23,9 @@ class TransitionTest extends TestCase
         $transition = new Transition([$state1], $state2, SubmitAction::class, function () {
             return new NullTx();
         });
+        $transition->addListener(Transition::EVENT_RUN_SUCCESS, function ($event) {
+            echo sprintf('fromState: %s => toState: %s', $event->fromState->id(), $event->toState->id());
+        });
 
         $order = new Order();
         $order->setState($state1);

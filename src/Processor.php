@@ -31,6 +31,13 @@ class Processor
     private $txCreatorClosure;
 
     /**
+     * 保存事件列表
+     *
+     * @var array
+     */
+    private $events;
+
+    /**
      * 构造函数
      *
      * @param string $txCreatorClass 事务创建器类
@@ -81,6 +88,7 @@ class Processor
     public function removeTransition(string $id)
     {
         unset($this->transitionClosures[$id]);
+        $this->events[$id] = [];
     }
 
     /**
@@ -92,6 +100,55 @@ class Processor
     public function hasTransition(string $id)
     {
         return isset($this->transitionClosures[$id]);
+    }
+
+    /**
+     * 为指定流转附加事件
+     *
+     * @param string $id 流转名称
+     * @param string $event 事件名称
+     * @param string|callable $listener 事件监听器
+     * @return void
+     */
+    public function addTransistionEvent(string $id, string $event, $listener)
+    {
+        if (!isset($this->transitionClosures[$id])) {
+            throw new StateException(sprintf('流转[%s]不存在', $id));
+        }
+
+        $this->events[$id][$event][] = $listener;
+    }
+
+    /**
+     * 删除流转事件
+     *
+     * @param string $id 流转名称
+     * @param string $event 事件名称
+     * @param string|callable|null $listener 如果为null, 即移除事件对应所有监听器
+     * @return void
+     */
+    public function removeTransitionEvent(string $id, string $event, $listener)
+    {
+        if (!isset($this->transitionClosures[$id])) {
+            throw new StateException(sprintf('流转[%s]不存在', $id));
+        }
+
+        if (!isset($this->events[$id][$event])) {
+            return;
+        }
+
+        if (is_null($listener)) {
+            $this->events[$id][$event] = [];
+            return;
+        }
+
+        foreach ($this->events[$id][$event] as $key => $item) {
+            if ($item === $listener) {
+
+                unset($this->events[$id][$event][$key]);
+                break;
+            }
+        }
     }
 
     /**
@@ -127,6 +184,14 @@ class Processor
         }
 
         $transition = $this->transitionClosures[$id]();
+        if (isset($this->events[$id])) {
+            $events = $this->events[$id];
+            foreach ($events as $name => $listeners) {
+                foreach ($listeners as $listener) {
+                    $transition->addListener($name, $listener);
+                }
+            }
+        }
 
         try {
             $transition->run($domainObject);

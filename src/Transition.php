@@ -163,4 +163,28 @@ class Transition
             throw $ex;
         }
     }
+
+    /**
+     * 注册事件监听器
+     *
+     * @param string $name 事件名称
+     * @param string|callable $listener 事件监听器
+     * @return void
+     */
+    public function addListener(string $name, $listener)
+    {
+        $this->getEventManager()->addListener($name, $listener);
+    }
+
+    /**
+     * 移除事件监听器
+     *
+     * @param string $name
+     * @param string|callable|null $listener 如果为null, 即移除事件对应所有监听器
+     * @return void
+     */
+    public function removeListener(string $name, $listener = null)
+    {
+        $this->getEventManager()->removeListener($name, $listener);
+    }
 }
