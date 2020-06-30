@@ -3,7 +3,10 @@
 namespace Lzpeng\StateProcess;
 
 use Lzpeng\StateProcess\Contracts\StatefulInterface;
+use Lzpeng\StateProcess\Event\Event;
+use Lzpeng\StateProcess\Event\EventManager;
 use Lzpeng\StateProcess\Exceptions\RejectedException;
+use Lzpeng\StateProcess\Exceptions\StateException;
 
 /**
  * 流转的抽象
@@ -12,6 +15,10 @@ use Lzpeng\StateProcess\Exceptions\RejectedException;
  */
 class Transition
 {
+    const EVENT_RUN_BEFORE = 'run_before';
+    const EVENT_RUN_SUCCESS = 'run_success';
+    const EVENT_RUN_FAILURE = 'run_failure';
+
     /**
      * 支持的来源状态
      *
@@ -40,12 +47,33 @@ class Transition
      */
     private $txCreatorClosure;
 
+    /**
+     * 事件管理器
+     *
+     * @var \Lzpeng\StateProcess\Event\EventManager
+     */
+    private $eventManager;
+
     public function __construct(array $fromStates, State $toState, string $actionClass, \Closure $txCreatorClosure)
     {
         $this->fromStates = $fromStates;
         $this->toState = $toState;
         $this->actionClass = $actionClass;
         $this->txCreatorClosure = $txCreatorClosure;
+    }
+
+    /**
+     * 返回事件管理器
+     *
+     * @return \Lzpeng\StateProcess\Event\EventManager
+     */
+    private function getEventManager()
+    {
+        if (is_null($this->eventManager)) {
+            $this->eventManager = new EventManager();
+        }
+
+        return $this->eventManager;
     }
 
     /**
@@ -108,12 +136,55 @@ class Transition
 
         $action = new $this->actionClass;
         try {
+            $this->getEventManager()->dispatch(self::EVENT_RUN_BEFORE, new Event([
+                'domainObject' => $domainObject,
+                'fromState' => $fromState,
+                'toState' => $this->toState(),
+            ]));
+
             $action->execute($domainObject, $fromState, $this->toState());
             $domainObject->setState($this->toState);
             $tx->commit();
+
+            $this->getEventManager()->dispatch(self::EVENT_RUN_SUCCESS, new Event([
+                'domainObject' => $domainObject,
+                'fromState' => $fromState,
+                'toState' => $this->toState(),
+            ]));
         } catch (\Exception $ex) {
             $tx->rollback();
+
+            $this->getEventManager()->dispatch(self::EVENT_RUN_FAILURE, new Event([
+                'domainObject' => $domainObject,
+                'fromState' => $fromState,
+                'toState' => $this->toState(),
+                'exception' => $ex,
+            ]));
             throw $ex;
         }
+    }
+
+    /**
+     * 注册事件监听器
+     *
+     * @param string $name 事件名称
+     * @param string|callable $listener 事件监听器
+     * @return void
+     */
+    public function addListener(string $name, $listener)
+    {
+        $this->getEventManager()->addListener($name, $listener);
+    }
+
+    /**
+     * 移除事件监听器
+     *
+     * @param string $name
+     * @param string|callable|null $listener 如果为null, 即移除事件对应所有监听器
+     * @return void
+     */
+    public function removeListener(string $name, $listener = null)
+    {
+        $this->getEventManager()->removeListener($name, $listener);
     }
 }

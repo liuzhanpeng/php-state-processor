@@ -5,6 +5,8 @@ use Lzpeng\StateProcess\Tests\Actions\CloseAction;
 use Lzpeng\StateProcess\Tests\Actions\FinishAction;
 use Lzpeng\StateProcess\Tests\Actions\PayAction;
 use Lzpeng\StateProcess\Tests\Actions\SubmitAction;
+use Lzpeng\StateProcess\Tests\Listeners\MessageListener;
+use Lzpeng\StateProcess\Transition;
 use Lzpeng\StateProcess\Tx\NullTx;
 
 return [
@@ -19,11 +21,23 @@ return [
             'from' => ['inited'],
             'to' => 'audited',
             'action' => AuditAction::class,
+            'events' => [
+                Transition::EVENT_RUN_SUCCESS => [
+                    function ($event) {
+                        echo '审核成功....';
+                    }
+                ],
+            ]
         ],
         'pay' => [
             'from' => ['audited'],
             'to' => 'payed',
             'action' => PayAction::class,
+            'events' => [
+                Transition::EVENT_RUN_SUCCESS => [
+                    MessageListener::class,
+                ],
+            ]
         ],
         'finish' => [
             'from' => ['payed'],
