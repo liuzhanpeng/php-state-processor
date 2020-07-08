@@ -24,13 +24,6 @@ class Processor
     private $transitionClosures = [];
 
     /**
-     * 事务创建器闭包
-     *
-     * @var \Closure
-     */
-    private $txCreatorClosure;
-
-    /**
      * 保存事件列表
      *
      * @var array
@@ -39,44 +32,26 @@ class Processor
 
     /**
      * 构造函数
-     *
-     * @param string $txCreatorClass 事务创建器类
-     * @throws \Lzpeng\StateProcess\Exceptions\StateException
      */
-    public function __construct(string $txCreatorClass)
+    public function __construct()
     {
-        if (!class_exists($txCreatorClass) || !in_array(TxCreatorInterface::class, class_implements($txCreatorClass))) {
-            throw new StateException(sprintf('事务创建器[%s]不存在或未实现\Lzpeng\StateProcess\Tx\TxCreatorInterface', $txCreatorClass));
-        }
-
-        $this->txCreatorClosure = function () use ($txCreatorClass) {
-            return new $txCreatorClass;
-        };
     }
 
     /**
      * 添加流转
      *
      * @param string $id 流转标识
-     * @param array<State> $fromStates 支持的来源状态
-     * @param State $toState 目标状态
-     * @param string $actionClass 动作类
+     * @param \Closure $transitionClosure 生成流转对象的闭包
      * @return void
      * @throws \Lzpeng\StateProcess\Exceptions\StateException
      */
-    public function addTransition(string $id, array $fromStates, State $toState, string $actionClass)
+    public function addTransition(string $id, \Closure $transitionClosure)
     {
         if (isset($this->transitionClosures[$id])) {
             throw new StateException(sprintf('流转[%s]已存在，不能重复添加', $id));
         }
 
-        if (!class_exists($actionClass) || !in_array(ActionInterface::class, class_implements($actionClass))) {
-            throw new StateException(sprintf('动作[%s]不存在或未实现ActionInterface', $actionClass));
-        }
-
-        $this->transitionClosures[$id] = function () use ($fromStates, $toState, $actionClass) {
-            return new Transition($fromStates, $toState, $actionClass, $this->txCreatorClosure);
-        };
+        $this->transitionClosures[$id] = $transitionClosure;
     }
 
     /**
@@ -97,7 +72,7 @@ class Processor
      * @param string $id 流转标识
      * @return boolean
      */
-    public function hasTransition(string $id)
+    public function hasTransition(string $id): bool
     {
         return isset($this->transitionClosures[$id]);
     }
@@ -158,7 +133,7 @@ class Processor
      * @param StatefulInterface $domainObject 业务对象
      * @return boolean
      */
-    public function can(string $id, StatefulInterface $domainObject)
+    public function can(string $id, StatefulInterface $domainObject): bool
     {
         if (!$this->hasTransition($id)) {
             return false;
@@ -198,5 +173,38 @@ class Processor
         } catch (StateException $ex) {
             throw $ex;
         }
+    }
+
+    /**
+     * 获取流转的来源状态
+     *
+     * @param string $id 流转标识
+     * @return array<State>
+     */
+    public function getFormStates(string $id): array
+    {
+        if (!$this->hasTransition($id)) {
+            throw new StateException(sprintf('流转[%s]不存在，不能获得目标状态'));
+        }
+
+        $transition = $this->transitionClosures[$id]();
+        return $transition->fromStates();
+    }
+
+    /**
+     * 获取流转成功后的目标状态
+     *
+     * @param string $id 流转标识
+     * @return State
+     * @throws StateException
+     */
+    public function getToState(string $id): State
+    {
+        if (!$this->hasTransition($id)) {
+            throw new StateException(sprintf('流转[%s]不存在，不能获得目标状态'));
+        }
+
+        $transition = $this->transitionClosures[$id]();
+        return $transition->toState();
     }
 }

@@ -26,12 +26,25 @@ class ProcessorTest extends TestCase
         $state5 = new State('finished');
         $state6 = new State('closed');
 
-        $processor = new Processor(NullTx::class);
-        $processor->addTransition('init', [$state1], $state2, SubmitAction::class);
-        $processor->addTransition('audit', [$state2], $state3, AuditAction::class);
-        $processor->addTransition('pay', [$state3], $state4, PayAction::class);
-        $processor->addTransition('finish', [$state4], $state5, FinishAction::class);
-        $processor->addTransition('close', [$state2, $state3, $state4, $state5], $state6, CloseAction::class);
+        $processor = new Processor();
+        $txCreateorClosure = function () {
+            return new NullTx();
+        };
+        $processor->addTransition('init', function () use ($state1, $state2, $txCreateorClosure) {
+            return new Transition([$state1], $state2, SubmitAction::class, $txCreateorClosure);
+        });
+        $processor->addTransition('audit', function () use ($state2, $state3, $txCreateorClosure) {
+            return new Transition([$state2], $state3, AuditAction::class, $txCreateorClosure);
+        });
+        $processor->addTransition('pay', function () use ($state3, $state4, $txCreateorClosure) {
+            return new Transition([$state3], $state4, PayAction::class, $txCreateorClosure);
+        });
+        $processor->addTransition('finish', function () use ($state4, $state5, $txCreateorClosure) {
+            return new Transition([$state4], $state5, FinishAction::class, $txCreateorClosure);
+        });
+        $processor->addTransition('close', function () use ($state2, $state3, $state4, $state5, $state6, $txCreateorClosure) {
+            return new Transition([$state2, $state3, $state4, $state5], $state6, CloseAction::class, $txCreateorClosure);
+        });
         $processor->addTransistionEvent('pay', Transition::EVENT_RUN_SUCCESS, function ($event) {
             echo '支付成功，闭包发送模析消息...';
         });
@@ -46,6 +59,7 @@ class ProcessorTest extends TestCase
         $this->assertFalse($processor->can('finish', $order));
         $this->assertFalse($processor->can('close', $order));
 
+        $this->assertEquals($processor->getToState('init'), $state2);
         $processor->execute('init', $order);
         $this->assertEquals($order->state(), $state2);
 
@@ -68,13 +82,25 @@ class ProcessorTest extends TestCase
         $state5 = new State('finished');
         $state6 = new State('closed');
 
-        $processor = new Processor(NullTx::class);
-        $processor->addTransition('init', [$state1], $state2, SubmitAction::class);
-        $processor->addTransition('audit', [$state2], $state3, AuditAction::class);
-        $processor->addTransition('pay', [$state3], $state4, PayAction::class);
-        $processor->addTransition('finish', [$state4], $state5, FinishAction::class);
-        $processor->addTransition('close', [$state2, $state3, $state4, $state5], $state6, CloseAction::class);
-
+        $processor = new Processor();
+        $txCreateorClosure = function () {
+            return new NullTx();
+        };
+        $processor->addTransition('init', function () use ($state1, $state2, $txCreateorClosure) {
+            return new Transition([$state1], $state2, SubmitAction::class, $txCreateorClosure);
+        });
+        $processor->addTransition('audit', function () use ($state2, $state3, $txCreateorClosure) {
+            return new Transition([$state2], $state3, AuditAction::class, $txCreateorClosure);
+        });
+        $processor->addTransition('pay', function () use ($state3, $state4, $txCreateorClosure) {
+            return new Transition([$state3], $state4, PayAction::class, $txCreateorClosure);
+        });
+        $processor->addTransition('finish', function () use ($state4, $state5, $txCreateorClosure) {
+            return new Transition([$state4], $state5, FinishAction::class, $txCreateorClosure);
+        });
+        $processor->addTransition('close', function () use ($state2, $state3, $state4, $state5, $state6, $txCreateorClosure) {
+            return new Transition([$state2, $state3, $state4, $state5], $state6, CloseAction::class, $txCreateorClosure);
+        });
         $order = new Order();
         $order->setState($state1);
 
