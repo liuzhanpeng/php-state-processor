@@ -2,7 +2,7 @@
     "name": "lzpeng/php-state-processor",
     "description": "状态流转处理器",
     "type": "library",
-    "license": "Apache License 2.0",
+    "license": "Apache-2.0",
     "authors": [
         {
             "name": "liuzhanpeng",
