@@ -184,7 +184,7 @@ class Processor
     public function getFormStates(string $id): array
     {
         if (!$this->hasTransition($id)) {
-            throw new StateException(sprintf('流转[%s]不存在，不能获得目标状态'));
+            throw new StateException(sprintf('流转[%s]不存在，不能获得目标状态', $id));
         }
 
         $transition = $this->transitionClosures[$id]();
@@ -201,7 +201,7 @@ class Processor
     public function getToState(string $id): State
     {
         if (!$this->hasTransition($id)) {
-            throw new StateException(sprintf('流转[%s]不存在，不能获得目标状态'));
+            throw new StateException(sprintf('流转[%s]不存在，不能获得目标状态', $id));
         }
 
         $transition = $this->transitionClosures[$id]();

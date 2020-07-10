@@ -30,6 +30,8 @@ class FactoryTest extends TestCase
         $processor->execute('audit', $order);
         $this->assertEquals($order->state()->id(), 'audited');
 
+        $toState = $processor->getToState('pay');
+        $this->assertEquals('payed', $toState->id());
         $processor->execute('pay', $order);
         $this->assertEquals($order->state()->id(), 'payed');
 
